@@ -5,7 +5,7 @@ export interface ITodo extends Document {
   description?: string;
   completed: boolean;
   archived: boolean;
-  priority: number;
+  priority: 'low' | 'medium' | 'high';
   user: Types.ObjectId;
 }
 
@@ -14,9 +14,9 @@ const TodoSchema = new Schema<ITodo>({
   description: { type: String },
   completed: { type: Boolean, default: false },
   archived: { type: Boolean, default: false },
-  priority: { type: Number, default: 0 },
+  priority: { type: String, enum: ['low', 'medium', 'high'], default: 'low' },
   user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
 }, { timestamps: true });
 
 const Todo = mongoose.model<ITodo>('Todo', TodoSchema);
-export default Todo; 
+export default Todo;
