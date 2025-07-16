@@ -6,6 +6,7 @@ info:
   description: API documentation for the Express Todos app
 servers:
   - url: http://localhost:5000
+  - url: https://typescript-todos.onrender.com
 paths:
   /api/auth/register:
     post:
