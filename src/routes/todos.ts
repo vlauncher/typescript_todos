@@ -13,6 +13,7 @@ router.post(
   auth,
   validate([
     body('title').isString().isLength({ min: 1, max: 100 }),
+    body('description').optional().isString().isLength({ max: 500 }),
   ]),
   TodoController.createTodo
 );
@@ -23,6 +24,7 @@ router.put(
   validate([
     param('id').isMongoId(),
     body('title').optional().isString().isLength({ min: 1, max: 100 }),
+    body('description').optional().isString().isLength({ max: 500 }),
     body('completed').optional().isBoolean(),
   ]),
   TodoController.updateTodo

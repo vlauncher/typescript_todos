@@ -7,6 +7,7 @@ import swaggerUi from 'swagger-ui-express';
 import redoc from 'redoc-express';
 import YAML from 'yamljs';
 import path from 'path';
+import cookieParser from 'cookie-parser';
 
 dotenv.config();
 
@@ -20,8 +21,12 @@ const allowedOrigins = process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split
 // app.use(helmet());
 
 // Use cors with allowed origins
-app.use(cors());
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true,
+}));
 
+app.use(cookieParser());
 app.use(express.json());
 
 app.use('/docs', express.static(path.join(process.cwd())));

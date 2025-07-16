@@ -50,4 +50,7 @@ router.post(
   AuthController.resetPassword
 );
 
+router.post('/logout', AuthController.logout);
+router.post('/refresh', AuthController.refreshToken);
+
 export default router; 

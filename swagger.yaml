@@ -88,24 +88,6 @@ paths:
           description: Password reset successful
         '400':
           description: Invalid or expired link
-  /api/auth/refresh-token:
-    post:
-      summary: Refresh JWT token
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/RefreshTokenRequest'
-      responses:
-        '200':
-          description: Token refreshed
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AuthResponse'
-        '400':
-          description: Invalid refresh token
   /api/todos:
     get:
       summary: Get all todos for the authenticated user
@@ -178,6 +160,46 @@ paths:
           description: Todo deleted
         '404':
           description: Todo not found
+  /api/todos/{id}/toggleArchived:
+    patch:
+      summary: Toggle archived status of a todo
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Todo archived status toggled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Todo'
+        '404':
+          description: Todo not found
+  /api/todos/{id}/toggleCompleted:
+    patch:
+      summary: Toggle completed status of a todo
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Todo completed status toggled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Todo'
+        '404':
+          description: Todo not found
 components:
   securitySchemes:
     bearerAuth:
@@ -217,18 +239,10 @@ components:
       properties:
         password:
           type: string
-    RefreshTokenRequest:
-      type: object
-      required: [refreshToken]
-      properties:
-        refreshToken:
-          type: string
     AuthResponse:
       type: object
       properties:
-        access:
-          type: string
-        refresh:
+        token:
           type: string
     Todo:
       type: object
@@ -239,6 +253,7 @@ components:
           type: string
         description:
           type: string
+          example: "This is a sample todo description"
         completed:
           type: boolean
         archived:

@@ -16,9 +16,9 @@ export class TodoService {
   }
 
   static async createTodo(req: AuthRequest, res: Response) {
-    const { title } = req.body;
+    const { title, description, priority } = req.body;
     try {
-      const todo = await Todo.create({ title, user: req.user });
+      const todo = await Todo.create({ title, description, priority, user: req.user });
       res.status(201).json(todo);
     } catch (err) {
       res.status(500).json({ message: 'Server error' });
@@ -27,11 +27,11 @@ export class TodoService {
 
   static async updateTodo(req: AuthRequest, res: Response) {
     const { id } = req.params;
-    const { title, completed } = req.body;
+    const { title, description, completed, priority } = req.body;
     try {
       const todo = await Todo.findOneAndUpdate(
         { _id: id, user: req.user },
-        { title, completed },
+        { title, description, completed, priority },
         { new: true }
       );
       if (!todo) {

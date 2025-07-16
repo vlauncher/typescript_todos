@@ -65,10 +65,50 @@ export class AuthService {
       }
       const accessToken = jwt.sign({ userId: user._id }, config.jwtSecret, { expiresIn: '15m' });
       const refreshToken = jwt.sign({ userId: user._id }, config.jwtSecret, { expiresIn: '7d' });
-      res.json({ access: accessToken, refresh: refreshToken });
+      const userData = {
+        _id: user._id,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        email: user.email,
+        is_verified: user.is_verified,
+      };
+      res.cookie('refreshToken', refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      });
+      res.json({ access: accessToken, user: userData });
     } catch (err) {
       res.status(500).json({ message: 'Server error' });
     }
+  }
+
+  static async refreshToken(req: Request, res: Response) {
+    const token = req.cookies.refreshToken;
+    if (!token) {
+      return res.status(401).json({ message: 'No refresh token' });
+    }
+    try {
+      const decoded = jwt.verify(token, config.jwtSecret) as { userId: string };
+      const user = await User.findById(decoded.userId);
+      if (!user) {
+        return res.status(401).json({ message: 'Invalid refresh token' });
+      }
+      const accessToken = jwt.sign({ userId: user._id }, config.jwtSecret, { expiresIn: '15m' });
+      res.json({ access: accessToken });
+    } catch (err) {
+      res.status(401).json({ message: 'Invalid or expired refresh token' });
+    }
+  }
+
+  static async logout(req: Request, res: Response) {
+    res.clearCookie('refreshToken', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+    });
+    res.json({ message: 'Logged out successfully' });
   }
 
   static async forgotPassword(req: Request, res: Response) {

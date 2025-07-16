@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ProTask - Advanced Todo Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#6366f1',
+            secondary: '#8b5cf6',
+            dark: '#0f172a',
+            light: '#f8fafc',
+            success: '#10b981',
+            warning: '#f59e0b',
+            danger: '#ef4444',
+            info: '#0ea5e9'
+          },
+          fontFamily: {
+            'sans': ['Inter', 'sans-serif'],
+          },
+          boxShadow: {
+            'soft': '0 4px 24px rgba(0,0,0,0.05)',
+            'card': '0 8px 32px rgba(0,0,0,0.08)'
+          }
+        }
+      }
+    }
+  </script>
+  <style type="text/tailwindcss">
+    @layer base {
+      body {
+        @apply bg-gray-50 text-gray-800 font-sans;
+      }
+      .gradient-bg {
+        @apply bg-gradient-to-br from-primary to-secondary;
+      }
+      .card {
+        @apply bg-white rounded-2xl shadow-soft p-6 transition-all duration-300 hover:shadow-card;
+      }
+      .btn-primary {
+        @apply gradient-bg text-white font-medium py-3 px-6 rounded-xl hover:opacity-90 transition-all duration-200 shadow-md;
+      }
+      .btn-secondary {
+        @apply bg-gray-100 text-gray-700 font-medium py-3 px-6 rounded-xl hover:bg-gray-200 transition-all duration-200;
+      }
+      .input-field {
+        @apply w-full p-3.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent;
+      }
+      .social-btn {
+        @apply flex items-center justify-center gap-3 w-full py-3.5 rounded-xl border border-gray-300 hover:bg-gray-50 transition-colors;
+      }
+      .priority-low { @apply bg-green-100 text-green-800; }
+      .priority-medium { @apply bg-yellow-100 text-yellow-800; }
+      .priority-high { @apply bg-red-100 text-red-800; }
+    }
+    .todo-item {
+      @apply flex flex-col p-5 border-b border-gray-200 hover:bg-gray-50 transition-colors;
+    }
+    .todo-item.completed .todo-title {
+      @apply line-through text-gray-400;
+    }
+    .auth-container {
+      background: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23e0e7ff' fill-opacity='0.2' fill-rule='evenodd'/%3E%3C/svg%3E");
+    }
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      gap: 24px;
+    }
+    @media (max-width: 768px) {
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-gray-50">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    // Mock database with enhanced todos
+    const mockUsers = [
+      { id: 1, first_name: "Alex", last_name: "Johnson", email: "alex@example.com", password: "Password123!" },
+      { id: 2, first_name: "Taylor", last_name: "Smith", email: "taylor@example.com", password: "Password123!" }
+    ];
+    
+    let todosData = [
+      { 
+        id: 1, 
+        userId: 1, 
+        title: "Complete project proposal", 
+        description: "Finalize the proposal document and send to client for review",
+        priority: "high",
+        completed: true 
+      },
+      { 
+        id: 2, 
+        userId: 1, 
+        title: "Schedule team meeting", 
+        description: "Coordinate with team members for next week's sprint planning",
+        priority: "medium",
+        completed: false 
+      },
+      { 
+        id: 3, 
+        userId: 1, 
+        title: "Review design mockups", 
+        description: "Provide feedback on the new UI designs from the design team",
+        priority: "medium",
+        completed: false 
+      },
+      { 
+        id: 4, 
+        userId: 2, 
+        title: "Prepare quarterly report", 
+        description: "Compile sales data and performance metrics for Q3 presentation",
+        priority: "high",
+        completed: true 
+      },
+      { 
+        id: 5, 
+        userId: 2, 
+        title: "Update client documentation", 
+        description: "Add new API endpoints to the client integration guide",
+        priority: "low",
+        completed: false 
+      }
+    ];
+
+    // App component
+    function App() {
+      const [currentUser, setCurrentUser] = useState(null);
+      const [page, setPage] = useState('home');
+      const [todos, setTodos] = useState([]);
+      const [loading, setLoading] = useState(false);
+      const [resetToken, setResetToken] = useState(null);
+
+      // Load todos when user logs in
+      useEffect(() => {
+        if (currentUser) {
+          setLoading(true);
+          // Simulate API call
+          setTimeout(() => {
+            const userTodos = todosData.filter(todo => todo.userId === currentUser.id);
+            setTodos(userTodos);
+            setLoading(false);
+          }, 500);
+        } else {
+          setTodos([]);
+        }
+      }, [currentUser]);
+
+      // Auth functions
+      const login = (email, password) => {
+        setLoading(true);
+        // Simulate API call
+        setTimeout(() => {
+          const user = mockUsers.find(u => u.email === email && u.password === password);
+          if (user) {
+            setCurrentUser(user);
+            setPage('dashboard');
+          }
+          setLoading(false);
+        }, 800);
+      };
+
+      const register = (firstName, lastName, email, password) => {
+        setLoading(true);
+        // Simulate API call
+        setTimeout(() => {
+          const newUser = {
+            id: mockUsers.length + 1,
+            first_name: firstName,
+            last_name: lastName,
+            email,
+            password
+          };
+          mockUsers.push(newUser);
+          setCurrentUser(newUser);
+          setPage('dashboard');
+          setLoading(false);
+        }, 800);
+      };
+
+      const logout = () => {
+        setCurrentUser(null);
+        setPage('home');
+      };
+
+      const requestPasswordReset = (email) => {
+        setLoading(true);
+        // Simulate API call
+        setTimeout(() => {
+          const user = mockUsers.find(u => u.email === email);
+          if (user) {
+            // Generate a reset token (in a real app this would be a JWT)
+            const token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+            setResetToken(token);
+            setPage('resetPassword');
+          }
+          setLoading(false);
+        }, 800);
+      };
+
+      const resetPassword = (token, newPassword) => {
+        setLoading(true);
+        // Simulate API call
+        setTimeout(() => {
+          if (token === resetToken) {
+            // Find user and update password
+            const userIndex = mockUsers.findIndex(u => u.email === currentUser?.email);
+            if (userIndex !== -1) {
+              mockUsers[userIndex].password = newPassword;
+            }
+            setPage('login');
+            setResetToken(null);
+          }
+          setLoading(false);
+        }, 800);
+      };
+
+      // Enhanced Todo functions with priority and description
+      const addTodo = (title, description, priority) => {
+        const newTodo = {
+          id: todos.length > 0 ? Math.max(...todos.map(t => t.id)) + 1 : 1,
+          userId: currentUser.id,
+          title,
+          description,
+          priority,
+          completed: false
+        };
+        todosData.push(newTodo);
+        setTodos([...todos, newTodo]);
+      };
+
+      const toggleTodo = (id) => {
+        const updatedTodos = todos.map(todo => 
+          todo.id === id ? { ...todo, completed: !todo.completed } : todo
+        );
+        todosData = todosData.map(todo => 
+          todo.id === id ? { ...todo, completed: !todo.completed } : todo
+        );
+        setTodos(updatedTodos);
+      };
+
+      const deleteTodo = (id) => {
+        const updatedTodos = todos.filter(todo => todo.id !== id);
+        todosData = todosData.filter(todo => todo.id !== id);
+        setTodos(updatedTodos);
+      };
+
+      const updateTodo = (id, newTitle, newDescription, newPriority) => {
+        const updatedTodos = todos.map(todo => 
+          todo.id === id ? { ...todo, title: newTitle, description: newDescription, priority: newPriority } : todo
+        );
+        todosData = todosData.map(todo => 
+          todo.id === id ? { ...todo, title: newTitle, description: newDescription, priority: newPriority } : todo
+        );
+        setTodos(updatedTodos);
+      };
+
+      // Render page based on state
+      const renderPage = () => {
+        switch(page) {
+          case 'home':
+            return <HomePage setPage={setPage} />;
+          case 'login':
+            return <LoginPage login={login} setPage={setPage} loading={loading} />;
+          case 'register':
+            return <RegisterPage register={register} setPage={setPage} loading={loading} />;
+          case 'forgotPassword':
+            return <ForgotPasswordPage requestPasswordReset={requestPasswordReset} setPage={setPage} loading={loading} />;
+          case 'resetPassword':
+            return <ResetPasswordPage resetPassword={resetPassword} setPage={setPage} loading={loading} />;
+          case 'dashboard':
+            return <DashboardPage 
+              currentUser={currentUser} 
+              logout={logout} 
+              todos={todos} 
+              addTodo={addTodo} 
+              toggleTodo={toggleTodo} 
+              deleteTodo={deleteTodo} 
+              updateTodo={updateTodo} 
+              loading={loading} 
+            />;
+          default:
+            return <HomePage setPage={setPage} />;
+        }
+      };
+
+      return (
+        <div className="min-h-screen flex flex-col">
+          <Header currentUser={currentUser} logout={logout} setPage={setPage} />
+          <main className="flex-grow">
+            {renderPage()}
+          </main>
+        </div>
+      );
+    }
+
+    // Header component
+    function Header({ currentUser, logout, setPage }) {
+      return (
+        <header className="gradient-bg text-white shadow-md">
+          <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div className="flex items-center space-x-3">
+              <div className="bg-white p-2 rounded-xl">
+                <i className="fas fa-tasks text-primary text-xl"></i>
+              </div>
+              <h1 className="text-2xl font-bold">ProTask</h1>
+            </div>
+            
+            <nav>
+              <ul className="flex space-x-5 items-center">
+                {currentUser ? (
+                  <>
+                    <li>
+                      <button 
+                        onClick={() => setPage('dashboard')}
+                        className="hover:opacity-80 transition-opacity flex items-center gap-2"
+                      >
+                        <i className="fas fa-home"></i>
+                        Dashboard
+                      </button>
+                    </li>
+                    <li className="w-px h-6 bg-white bg-opacity-20"></li>
+                    <li>
+                      <button 
+                        onClick={logout}
+                        className="bg-white text-primary py-1.5 px-5 rounded-xl font-medium hover:bg-gray-100 transition-colors flex items-center gap-2"
+                      >
+                        <i className="fas fa-sign-out-alt"></i>
+                        Logout
+                      </button>
+                    </li>
+                  </>
+                ) : (
+                  <>
+                    <li>
+                      <button 
+                        onClick={() => setPage('home')}
+                        className="hover:opacity-80 transition-opacity"
+                      >
+                        Home
+                      </button>
+                    </li>
+                    <li>
+                      <button 
+                        onClick={() => setPage('login')}
+                        className="hover:opacity-80 transition-opacity"
+                      >
+                        Login
+                      </button>
+                    </li>
+                    <li>
+                      <button 
+                        onClick={() => setPage('register')}
+                        className="bg-white text-primary py-1.5 px-5 rounded-xl font-medium hover:bg-gray-100 transition-colors"
+                      >
+                        Sign Up
+                      </button>
+                    </li>
+                  </>
+                )}
+              </ul>
+            </nav>
+          </div>
+        </header>
+      );
+    }
+
+    // Home page (simplified)
+    function HomePage({ setPage }) {
+      return (
+        <div className="auth-container">
+          <div className="container mx-auto px-4 py-16">
+            <div className="max-w-4xl mx-auto text-center">
+              <div className="inline-flex items-center justify-center bg-primary bg-opacity-10 rounded-full p-3 mb-6">
+                <i className="fas fa-tasks text-primary text-xl"></i>
+              </div>
+              <h1 className="text-4xl md:text-5xl font-bold mb-6 text-gray-800">
+                Advanced <span className="text-primary">Task Management</span>
+              </h1>
+              <p className="text-xl text-gray-600 mb-10 max-w-2xl mx-auto">
+                The ultimate productivity tool for managing your tasks
+              </p>
+              <div className="flex flex-col sm:flex-row justify-center gap-4">
+                <button 
+                  onClick={() => setPage('register')}
+                  className="btn-primary text-lg py-3.5 px-8 flex items-center gap-2"
+                >
+                  <i className="fas fa-rocket"></i>
+                  Get Started
+                </button>
+                <button 
+                  onClick={() => setPage('login')}
+                  className="btn-secondary text-lg py-3.5 px-8 flex items-center gap-2"
+                >
+                  <i className="fas fa-sign-in-alt"></i>
+                  Sign In
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Login page
+    function LoginPage({ login, setPage, loading }) {
+      const [email, setEmail] = useState("");
+      const [password, setPassword] = useState("");
+      const [error, setError] = useState("");
+
+      const handleSubmit = (e) => {
+        e.preventDefault();
+        if (!email || !password) {
+          setError("Please fill in all fields");
+          return;
+        }
+        login(email, password);
+      };
+
+      return (
+        <div className="auth-container py-16">
+          <div className="container mx-auto px-4">
+            <div className="max-w-md mx-auto">
+              <div className="card">
+                <div className="text-center mb-8">
+                  <div className="w-16 h-16 gradient-bg rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <i className="fas fa-lock text-white text-2xl"></i>
+                  </div>
+                  <h2 className="text-3xl font-bold mb-2">Welcome Back</h2>
+                  <p className="text-gray-600">Sign in to your account</p>
+                </div>
+                
+                {error && (
+                  <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-4">
+                    {error}
+                  </div>
+                )}
+                
+                <form onSubmit={handleSubmit}>
+                  <div className="mb-4">
+                    <label className="block text-gray-700 mb-2 font-medium">Email</label>
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="input-field"
+                      placeholder="your@email.com"
+                    />
+                  </div>
+                  <div className="mb-6">
+                    <label className="block text-gray-700 mb-2 font-medium">Password</label>
+                    <input
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="input-field"
+                      placeholder="••••••••"
+                    />
+                  </div>
+                  <button 
+                    type="submit" 
+                    disabled={loading}
+                    className="btn-primary w-full py-3.5 mb-4"
+                  >
+                    {loading ? (
+                      <span className="flex items-center justify-center">
+                        <i className="fas fa-spinner fa-spin mr-2"></i> Signing in...
+                      </span>
+                    ) : (
+                      "Sign In"
+                    )}
+                  </button>
+                  
+                  <div className="text-center mb-6">
+                    <button 
+                      type="button"
+                      onClick={() => setPage('forgotPassword')}
+                      className="text-primary hover:underline"
+                    >
+                      Forgot password?
+                    </button>
+                  </div>
+                  
+                  <div className="text-center text-gray-600">
+                    Don't have an account?{' '}
+                    <button 
+                      type="button"
+                      onClick={() => setPage('register')}
+                      className="text-primary font-medium hover:underline"
+                    >
+                      Sign up
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Register page with first/last name
+    function RegisterPage({ register, setPage, loading }) {
+      const [firstName, setFirstName] = useState("");
+      const [lastName, setLastName] = useState("");
+      const [email, setEmail] = useState("");
+      const [password, setPassword] = useState("");
+      const [confirmPassword, setConfirmPassword] = useState("");
+      const [error, setError] = useState("");
+
+      const handleSubmit = (e) => {
+        e.preventDefault();
+        if (!firstName || !lastName || !email || !password || !confirmPassword) {
+          setError("Please fill in all fields");
+          return;
+        }
+        if (password !== confirmPassword) {
+          setError("Passwords don't match");
+          return;
+        }
+        if (password.length < 6) {
+          setError("Password must be at least 6 characters");
+          return;
+        }
+        register(firstName, lastName, email, password);
+      };
+
+      return (
+        <div className="auth-container py-16">
+          <div className="container mx-auto px-4">
+            <div className="max-w-md mx-auto">
+              <div className="card">
+                <div className="text-center mb-8">
+                  <div className="w-16 h-16 gradient-bg rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <i className="fas fa-user-plus text-white text-2xl"></i>
+                  </div>
+                  <h2 className="text-3xl font-bold mb-2">Create Account</h2>
+                  <p className="text-gray-600">Join our community today</p>
+                </div>
+                
+                {error && (
+                  <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-4">
+                    {error}
+                  </div>
+                )}
+                
+                <form onSubmit={handleSubmit}>
+                  <div className="mb-4">
+                    <label className="block text-gray-700 mb-2 font-medium">First Name</label>
+                    <input
+                      type="text"
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      className="input-field"
+                      placeholder="John"
+                    />
+                  </div>
+                  <div className="mb-4">
+                    <label className="block text-gray-700 mb-2 font-medium">Last Name</label>
+                    <input
+                      type="text"
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      className="input-field"
+                      placeholder="Doe"
+                    />
+                  </div>
+                  <div className="mb-4">
+                    <label className="block text-gray-700 mb-2 font-medium">Email</label>
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="input-field"
+                      placeholder="your@email.com"
+                    />
+                  </div>
+                  <div className="mb-4">
+                    <label className="block text-gray-700 mb-2 font-medium">Password</label>
+                    <input
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="input-field"
+                      placeholder="••••••••"
+                    />
+                  </div>
+                  <div className="mb-6">
+                    <label className="block text-gray-700 mb-2 font-medium">Confirm Password</label>
+                    <input
+                      type="password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className="input-field"
+                      placeholder="••••••••"
+                    />
+                  </div>
+                  <button 
+                    type="submit" 
+                    disabled={loading}
+                    className="btn-primary w-full py-3.5 mb-6"
+                  >
+                    {loading ? (
+                      <span className="flex items-center justify-center">
+                        <i className="fas fa-spinner fa-spin mr-2"></i> Creating account...
+                      </span>
+                    ) : (
+                      "Sign Up"
+                    )}
+                  </button>
+                  
+                  <div className="text-center text-gray-600">
+                    Already have an account?{' '}
+                    <button 
+                      type="button"
+                      onClick={() => setPage('login')}
+                      className="text-primary font-medium hover:underline"
+                    >
+                      Sign in
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Dashboard page with enhanced todo functionality
+    function DashboardPage({ currentUser, logout, todos, addTodo, toggleTodo, deleteTodo, updateTodo, loading }) {
+      const [newTodo, setNewTodo] = useState({ title: "", description: "", priority: "medium" });
+      const [editingTodo, setEditingTodo] = useState(null);
+      const [filter, setFilter] = useState("all");
+
+      const handleAddTodo = (e) => {
+        e.preventDefault();
+        if (newTodo.title.trim()) {
+          addTodo(newTodo.title, newTodo.description, newTodo.priority);
+          setNewTodo({ title: "", description: "", priority: "medium" });
+        }
+      };
+
+      const startEditing = (todo) => {
+        setEditingTodo({ ...todo });
+      };
+
+      const submitEdit = () => {
+        if (editingTodo.title.trim()) {
+          updateTodo(editingTodo.id, editingTodo.title, editingTodo.description, editingTodo.priority);
+          setEditingTodo(null);
+        }
+      };
+
+      const filteredTodos = todos.filter(todo => {
+        if (filter === "completed") return todo.completed;
+        if (filter === "active") return !todo.completed;
+        if (filter === "high") return todo.priority === "high";
+        if (filter === "medium") return todo.priority === "medium";
+        if (filter === "low") return todo.priority === "low";
+        return true;
+      });
+
+      return (
+        <div className="container mx-auto px-4 py-8">
+          <div className="dashboard-grid">
+            {/* Sidebar */}
+            <div>
+              <div className="card mb-6">
+                <div className="flex items-center mb-6">
+                  <div className="w-16 h-16 rounded-2xl gradient-bg flex items-center justify-center text-white text-xl font-bold">
+                    {currentUser?.first_name?.charAt(0)}
+                  </div>
+                  <div className="ml-4">
+                    <h3 className="font-bold text-lg">{currentUser?.first_name} {currentUser?.last_name}</h3>
+                    <p className="text-gray-600 text-sm">{currentUser?.email}</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={logout}
+                  className="btn-secondary w-full py-2.5 flex items-center justify-center"
+                >
+                  <i className="fas fa-sign-out-alt mr-2"></i> Logout
+                </button>
+              </div>
+              
+              <div className="card">
+                <h3 className="font-bold text-lg mb-4">Dashboard Menu</h3>
+                <ul className="space-y-1">
+                  <li>
+                    <button className="flex items-center w-full p-3.5 rounded-xl bg-primary bg-opacity-10 text-primary">
+                      <i className="fas fa-tasks mr-3"></i>
+                      My Tasks
+                    </button>
+                  </li>
+                </ul>
+              </div>
+              
+              <div className="card mt-6">
+                <h3 className="font-bold text-lg mb-4">Filters</h3>
+                <div className="space-y-2">
+                  <button 
+                    onClick={() => setFilter("all")} 
+                    className={`flex items-center w-full p-3 rounded-xl text-left ${filter === "all" ? "bg-gray-100" : "hover:bg-gray-100"}`}
+                  >
+                    <i className="fas fa-list mr-3"></i>
+                    All Tasks
+                  </button>
+                  <button 
+                    onClick={() => setFilter("active")} 
+                    className={`flex items-center w-full p-3 rounded-xl text-left ${filter === "active" ? "bg-gray-100" : "hover:bg-gray-100"}`}
+                  >
+                    <i className="fas fa-circle text-info mr-3"></i>
+                    Active
+                  </button>
+                  <button 
+                    onClick={() => setFilter("completed")} 
+                    className={`flex items-center w-full p-3 rounded-xl text-left ${filter === "completed" ? "bg-gray-100" : "hover:bg-gray-100"}`}
+                  >
+                    <i className="fas fa-check-circle text-success mr-3"></i>
+                    Completed
+                  </button>
+                  <button 
+                    onClick={() => setFilter("high")} 
+                    className={`flex items-center w-full p-3 rounded-xl text-left ${filter === "high" ? "bg-gray-100" : "hover:bg-gray-100"}`}
+                  >
+                    <i className="fas fa-exclamation-circle text-danger mr-3"></i>
+                    High Priority
+                  </button>
+                  <button 
+                    onClick={() => setFilter("medium")} 
+                    className={`flex items-center w-full p-3 rounded-xl text-left ${filter === "medium" ? "bg-gray-100" : "hover:bg-gray-100"}`}
+                  >
+                    <i className="fas fa-exclamation text-warning mr-3"></i>
+                    Medium Priority
+                  </button>
+                  <button 
+                    onClick={() => setFilter("low")} 
+                    className={`flex items-center w-full p-3 rounded-xl text-left ${filter === "low" ? "bg-gray-100" : "hover:bg-gray-100"}`}
+                  >
+                    <i className="fas fa-arrow-down text-success mr-3"></i>
+                    Low Priority
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            {/* Main content */}
+            <div>
+              <div className="card mb-6">
+                <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold">Task Management</h2>
+                  <div className="flex space-x-2 mt-3 md:mt-0">
+                    <div className="bg-primary bg-opacity-10 text-primary px-3 py-1.5 rounded-lg text-sm">
+                      {todos.filter(t => !t.completed).length} Active
+                    </div>
+                    <div className="bg-success bg-opacity-10 text-success px-3 py-1.5 rounded-lg text-sm">
+                      {todos.filter(t => t.completed).length} Completed
+                    </div>
+                  </div>
+                </div>
+                
+                <form onSubmit={handleAddTodo} className="card bg-gray-50 p-5 mb-6">
+                  <h3 className="font-bold text-lg mb-4">Add New Task</h3>
+                  <div className="mb-4">
+                    <label className="block text-gray-700 mb-2 font-medium">Task Title</label>
+                    <input
+                      type="text"
+                      value={newTodo.title}
+                      onChange={(e) => setNewTodo({...newTodo, title: e.target.value})}
+                      className="input-field"
+                      placeholder="What needs to be done?"
+                    />
+                  </div>
+                  <div className="mb-4">
+                    <label className="block text-gray-700 mb-2 font-medium">Description</label>
+                    <textarea
+                      value={newTodo.description}
+                      onChange={(e) => setNewTodo({...newTodo, description: e.target.value})}
+                      className="input-field"
+                      placeholder="Add details..."
+                      rows="2"
+                    ></textarea>
+                  </div>
+                  <div className="mb-4">
+                    <label className="block text-gray-700 mb-2 font-medium">Priority</label>
+                    <div className="grid grid-cols-3 gap-3">
+                      <button 
+                        type="button"
+                        onClick={() => setNewTodo({...newTodo, priority: "low"})}
+                        className={`py-2.5 rounded-xl text-center ${newTodo.priority === "low" ? "bg-green-100 text-green-800 border border-green-300" : "bg-gray-100"}`}
+                      >
+                        Low
+                      </button>
+                      <button 
+                        type="button"
+                        onClick={() => setNewTodo({...newTodo, priority: "medium"})}
+                        className={`py-2.5 rounded-xl text-center ${newTodo.priority === "medium" ? "bg-yellow-100 text-yellow-800 border border-yellow-300" : "bg-gray-100"}`}
+                      >
+                        Medium
+                      </button>
+                      <button 
+                        type="button"
+                        onClick={() => setNewTodo({...newTodo, priority: "high"})}
+                        className={`py-2.5 rounded-xl text-center ${newTodo.priority === "high" ? "bg-red-100 text-red-800 border border-red-300" : "bg-gray-100"}`}
+                      >
+                        High
+                      </button>
+                    </div>
+                  </div>
+                  <div className="flex justify-end">
+                    <button 
+                      type="submit"
+                      className="btn-primary px-6"
+                    >
+                      <i className="fas fa-plus mr-2"></i> Add Task
+                    </button>
+                  </div>
+                </form>
+                
+                {loading ? (
+                  <div className="text-center py-12">
+                    <i className="fas fa-spinner fa-spin text-3xl text-primary"></i>
+                  </div>
+                ) : filteredTodos.length === 0 ? (
+                  <div className="text-center py-12">
+                    <i className="fas fa-check-circle text-4xl text-green-500 mb-4"></i>
+                    <h3 className="text-xl font-bold mb-2">No tasks found</h3>
+                    <p className="text-gray-600">Try changing your filters or add a new task</p>
+                  </div>
+                ) : (
+                  <div className="rounded-xl border border-gray-200 overflow-hidden">
+                    {filteredTodos.map(todo => (
+                      <div key={todo.id} className={`todo-item ${todo.completed ? 'completed' : ''}`}>
+                        <div className="flex justify-between">
+                          <div className="flex items-start">
+                            <button 
+                              onClick={() => toggleTodo(todo.id)}
+                              className="mr-4 w-5 h-5 rounded-full border-2 border-primary flex-shrink-0 mt-1 flex items-center justify-center"
+                            >
+                              {todo.completed && (
+                                <i className="fas fa-check text-primary text-xs"></i>
+                              )}
+                            </button>
+                            
+                            <div className="flex-grow">
+                              <div className="flex items-center mb-1">
+                                <h3 className="todo-title font-medium text-lg">{todo.title}</h3>
+                                <span className={`ml-3 text-xs font-medium px-2.5 py-0.5 rounded-full priority-${todo.priority}`}>
+                                  {todo.priority === "high" ? (
+                                    <i className="fas fa-exclamation-circle mr-1"></i>
+                                  ) : todo.priority === "medium" ? (
+                                    <i className="fas fa-exclamation mr-1"></i>
+                                  ) : (
+                                    <i className="fas fa-arrow-down mr-1"></i>
+                                  )}
+                                  {todo.priority.charAt(0).toUpperCase() + todo.priority.slice(1)}
+                                </span>
+                              </div>
+                              <p className="text-gray-600 text-sm">{todo.description}</p>
+                            </div>
+                          </div>
+                          
+                          <div className="flex space-x-2">
+                            <button 
+                              onClick={() => startEditing(todo)}
+                              className="w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center"
+                            >
+                              <i className="fas fa-edit text-gray-500"></i>
+                            </button>
+                            <button 
+                              onClick={() => deleteTodo(todo.id)}
+                              className="w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center"
+                            >
+                              <i className="fas fa-trash text-gray-500"></i>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <StatCard 
+                  value={todos.length} 
+                  label="Total Tasks" 
+                  icon="fa-tasks" 
+                  color="text-primary"
+                  trend="+2 from yesterday"
+                />
+                <StatCard 
+                  value={todos.filter(t => t.completed).length} 
+                  label="Completed" 
+                  icon="fa-check-circle" 
+                  color="text-success"
+                  trend="+3 this week"
+                />
+                <StatCard 
+                  value={todos.filter(t => t.priority === "high").length} 
+                  label="High Priority" 
+                  icon="fa-exclamation-circle" 
+                  color="text-danger"
+                  trend="Urgent attention"
+                />
+              </div>
+            </div>
+          </div>
+          
+          {/* Edit Todo Modal */}
+          {editingTodo && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+              <div className="card max-w-md w-full">
+                <h3 className="text-xl font-bold mb-4">Edit Task</h3>
+                <div className="mb-4">
+                  <label className="block text-gray-700 mb-2 font-medium">Title</label>
+                  <input
+                    type="text"
+                    value={editingTodo.title}
+                    onChange={(e) => setEditingTodo({...editingTodo, title: e.target.value})}
+                    className="input-field"
+                  />
+                </div>
+                <div className="mb-4">
+                  <label className="block text-gray-700 mb-2 font-medium">Description</label>
+                  <textarea
+                    value={editingTodo.description}
+                    onChange={(e) => setEditingTodo({...editingTodo, description: e.target.value})}
+                    className="input-field"
+                    rows="3"
+                  ></textarea>
+                </div>
+                <div className="mb-6">
+                  <label className="block text-gray-700 mb-2 font-medium">Priority</label>
+                  <div className="grid grid-cols-3 gap-3">
+                    <button 
+                      onClick={() => setEditingTodo({...editingTodo, priority: "low"})}
+                      className={`py-2.5 rounded-xl text-center ${editingTodo.priority === "low" ? "bg-green-100 text-green-800 border border-green-300" : "bg-gray-100"}`}
+                    >
+                      Low
+                    </button>
+                    <button 
+                      onClick={() => setEditingTodo({...editingTodo, priority: "medium"})}
+                      className={`py-2.5 rounded-xl text-center ${editingTodo.priority === "medium" ? "bg-yellow-100 text-yellow-800 border border-yellow-300" : "bg-gray-100"}`}
+                    >
+                      Medium
+                    </button>
+                    <button 
+                      onClick={() => setEditingTodo({...editingTodo, priority: "high"})}
+                      className={`py-2.5 rounded-xl text-center ${editingTodo.priority === "high" ? "bg-red-100 text-red-800 border border-red-300" : "bg-gray-100"}`}
+                    >
+                      High
+                    </button>
+                  </div>
+                </div>
+                <div className="flex justify-end space-x-3">
+                  <button 
+                    onClick={() => setEditingTodo(null)}
+                    className="btn-secondary px-5"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    onClick={submitEdit}
+                    className="btn-primary px-5"
+                  >
+                    Save Changes
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    function StatCard({ value, label, icon, color, trend }) {
+      return (
+        <div className="card">
+          <div className="flex justify-between items-center">
+            <div>
+              <p className="text-gray-600 mb-1">{label}</p>
+              <h3 className="text-3xl font-bold">{value}</h3>
+              <p className="text-sm text-gray-500 mt-1">{trend}</p>
+            </div>
+            <div className={`w-12 h-12 rounded-2xl bg-opacity-20 ${color} bg-current flex items-center justify-center`}>
+              <i className={`fas ${icon} ${color} text-xl`}></i>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Render the app
+    ReactDOM.render(<App />, document.getElementById('root'));
+  </script>
+</body>
+</html>
